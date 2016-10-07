@@ -51,9 +51,8 @@ var Fields = React.createClass({
             return (<NavItem eventKey={i}>{f.name}</NavItem>);
         });
         return (
-            <Col md={2}>
-                <Nav bsStyle="pills" stacked>{fieldtabs}</Nav>
-            </Col>
+            <Nav bsStyle="pills" stacked onSelect={this.props.onSelect}
+                 activeKey={this.props.selected}>{fieldtabs}</Nav>
         );
     }
 });
@@ -66,7 +65,8 @@ var Segments = React.createClass({
         });
         segmenttab.unshift(<NavItem eventKey={0}>All segments</NavItem>);
         return (
-            <Nav bsStyle="pills" stacked onSelect={this.props.onSelect}>{segmenttab}</Nav>
+            <Nav bsStyle="pills" stacked onSelect={this.props.onSelect}
+                 activeKey={this.props.selected}>{segmenttab}</Nav>
         )
     }
 });
@@ -75,7 +75,9 @@ var MarpleContent = React.createClass({
     getInitialState: function() {
         return {
             indexData: { indexpath: "loading", generation: -1, segments: []},
-            view: (<Col md={10}>Select a segment</Col>)
+            fieldsData: [],
+            selectedField: undefined,
+            selectedSegment: undefined
         }
     },
     componentDidMount: function() {
@@ -89,22 +91,44 @@ var MarpleContent = React.createClass({
     },
     selectSegment: function(segNumber) {
         loadFieldsData(segNumber, function(fieldsData) {
-            var view = (
-                <Col md={10}><Fields fields={fieldsData}/></Col>
-            );
-            this.setState({ view: view });
+            this.setState({ fieldsData: fieldsData, selectedSegment: segNumber, selectedField: undefined } );
         }.bind(this))
+    },
+    selectField: function(fieldName) {
+        this.setState({ selectedField: fieldName });
     },
     render: function() {
         return (
             <div>
                 <MarpleNav indexData={this.state.indexData}/>
                 <Col md={2}>
-                    <Segments segments={this.state.indexData.segments} onSelect={this.selectSegment}/>
+                    <Segments segments={this.state.indexData.segments} onSelect={this.selectSegment}
+                              selected={this.state.selectedSegment}/>
                 </Col>
-                {this.state.view}
+                <Col md={2}>
+                    <Fields fields={this.state.fieldsData} onSelect={this.selectField}
+                            selected={this.state.selectedField}/>
+                </Col>
+                <Col md={6}>
+                    <FieldData field={this.state.selectedField}/>
+                </Col>
             </div>
         )
+    }
+});
+
+var FieldData = React.createClass({
+    render: function() {
+        if (this.props.field == undefined) {
+            return (<div/>)
+        }
+        return (
+            <Nav bsStyle="tabs" justified activeKey="terms">
+                <NavItem eventKey="terms">Terms</NavItem>
+                <NavItem eventKey="docvalues">DocValues</NavItem>
+                <NavItem eventKey="points">Points</NavItem>
+            </Nav>
+        );
     }
 });
 
