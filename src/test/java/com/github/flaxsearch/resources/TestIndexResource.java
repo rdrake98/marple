@@ -15,30 +15,23 @@ package com.github.flaxsearch.resources;
  *   limitations under the License.
  */
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
-
-import java.io.IOException;
-
 import com.github.flaxsearch.api.IndexData;
-import com.github.flaxsearch.util.ReaderManager;
+import io.dropwizard.testing.junit.ResourceTestRule;
+import org.junit.ClassRule;
+import org.junit.Test;
 
-@Path("/index")
-@Produces(MediaType.APPLICATION_JSON)
-public class IndexResource {
+import static org.assertj.core.api.Assertions.assertThat;
 
-    private final ReaderManager readerManager;
-    private final String indexPath;
+public class TestIndexResource extends IndexResourceTestBase {
 
-    public IndexResource(String indexPath, ReaderManager readerManager) {
-        this.indexPath = indexPath;
-        this.readerManager = readerManager;
-    }
+    @ClassRule
+    public static final ResourceTestRule resource = ResourceTestRule.builder()
+            .addResource(new IndexResource("/path/to/index", () -> reader))
+            .build();
 
-    @GET
-    public IndexData getIndexData() throws IOException {
-        return new IndexData(indexPath, readerManager);
+    @Test
+    public void testIndexResource() {
+        IndexData indexData = resource.client().target("/index").request().get(IndexData.class);
+        assertThat(indexData.segments).hasSize(2);
     }
 }
